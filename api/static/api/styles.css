@@ -1,0 +1,35 @@
+.body {
+    margin: 10px;
+}
+
+button {
+    margin-top: 2px;
+}
+
+.card {
+    margin: 5px;
+}
+
+.card-title a {
+    color: black;
+}
+
+.edit-area {
+    display: none;
+}
+
+.info {
+    color: #777777;
+}
+
+.heart {
+    cursor: pointer;
+}
+
+.not-liked {
+    color: #dbdbdb;
+}
+
+.liked {
+    color: red;
+}

@@ -1,0 +1,81 @@
+{% extends "api/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+<h2>{{ title }}</h2>
+
+{% if show_new_post %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">New Post</h5>
+        <form action="{% url 'new_post' %}" method="post">
+            {% csrf_token %}
+            <label for="title">Question Title</label>
+            <input name="title" id="title" class="form-control" />
+            <label for="content">Question</label>
+            <textarea name="content" id="content" class="form-control"></textarea>
+
+            <p>Tags</p>
+            <input type="radio" id="none" name="tags" value="none">
+            <label for="none">None</label>
+            <input type="radio" id="aws" name="tags" value="aws">
+            <label for="aws">AWS</label>
+            <input type="radio" id="react" name="tags" value="react">
+            <label for="react">ReactJS</label>
+            <input type="radio" id="node" name="tags" value="node">
+            <label for="node">NodeJS</label>
+            <input type="radio" id="uxui" name="tags" value="uxui">
+            <label for="uxui">UX/UI</label>
+            <input type="radio" id="secure" name="tags" value="secure">
+            <label for="secure">Security</label>
+            <input type="radio" id="azure" name="tags" value="azure">
+            <label for="azure">Azure</label>
+            <br>
+            <button class="btn btn-sm btn-primary">Post</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% csrf_token %}
+{% for post in page.object_list %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">
+            <a href="#">
+                {{ post.title }}
+            </a>
+        </h5>
+        <p>Posted by: {{ post.poster.username }}</p>
+        <p class="tag-style">{{ post.tags }}</p>
+        {% if post.poster == request.user %}
+        <!-- <div>
+            <a data-post="{{ post.id }}" class="edit" href="#">Edit</a>
+        </div> -->
+        <textarea data-post="{{ post.id }}" class="edit-area form-control"></textarea>
+        {% endif %}
+        <div data-post="{{ post.id }}" class="post-content">{{ post.content }}</div>
+        <div class="info">{{ post.creation_time }}</div>
+        <div class="info">
+            <i data-like="{% if user in post.likes.all %}1{% else %}0{% endif %}" data-post="{{ post.id }}"
+                class="{% if user.is_authenticated %}heart{% endif %} fa fa-heart {% if user in post.likes.all %}liked{% else %}not-liked{% endif %}"></i>
+            <span class="like-count" data-post="{{ post.id }}">{{ post.likes.count }}</span>
+        </div>
+        <div data-post="{{ post.id }}" class="info post-comment">Comment</div>
+    </div>
+</div>
+{% endfor %}
+
+<hr>
+<ul class="pagination pagination-sm">
+    {% if page.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}">Newer Posts</a></li>
+    {% endif %}
+    {% if page.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}">Older Posts</a></li>
+    {% endif %}
+</ul>
+
+<script src="{% static 'api/scripts.js' %}"></script>
+{% endblock %}
