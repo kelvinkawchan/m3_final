@@ -17,7 +17,7 @@
             <textarea name="content" id="content" class="form-control"></textarea>
 
             <p>Tags</p>
-            <input type="radio" id="none" name="tags" value="none">
+            <input type="radio" id="none" name="tags" value="none" checked>
             <label for="none">None</label>
             <input type="radio" id="aws" name="tags" value="aws">
             <label for="aws">AWS</label>
@@ -36,6 +36,32 @@
         </form>
     </div>
 </div>
+{% endif %}
+
+{% if is_mentor %}
+{% if profile.tags == "None" %}
+<form action="{% url 'new_post' %}" method="post">
+    {% csrf_token %}
+    <p>Choose your expertise</p>
+    <input type="radio" id="none" name="tags" value="none" checked>
+    <label for="none">None</label>
+    <input type="radio" id="aws" name="tags" value="aws">
+    <label for="aws">AWS</label>
+    <input type="radio" id="react" name="tags" value="react">
+    <label for="react">ReactJS</label>
+    <input type="radio" id="node" name="tags" value="node">
+    <label for="node">NodeJS</label>
+    <input type="radio" id="uxui" name="tags" value="uxui">
+    <label for="uxui">UX/UI</label>
+    <input type="radio" id="secure" name="tags" value="secure">
+    <label for="secure">Security</label>
+    <input type="radio" id="azure" name="tags" value="azure">
+    <label for="azure">Azure</label>
+    <br>
+    <button class="btn btn-sm btn-primary">Submit</button>
+</form>
+{% endif %}
+
 {% endif %}
 
 {% csrf_token %}

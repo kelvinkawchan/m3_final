@@ -18,15 +18,22 @@ def show_posts(title, request, posts, profile=None):
     paginator = Paginator(posts, 10)
     page = paginator.page(page_index)
 
+    if profile is None or (not request.user.is_mentor):
+        mentor = False
+    else:
+        mentor = True
+
     # Show posts page
     return render(request, "api/index.html", {
         "title": title,
         "page": page,
         "profile": profile,
+        "is_mentor": mentor,
         "show_new_post": (
             request.user.is_authenticated and
-            (profile is None or profile == request.user)
-        )
+            (profile is None or profile == request.user) and
+            (not request.user.is_mentor)
+        ),
     })
 
 
@@ -128,10 +135,6 @@ def login_view(request):
 
 
 def logout_view(request):
-    user = get_object_or_404(User, request.user.id)
-    if user.is_free and user.is_mentor:
-        user.is_free = False
-        user.save()
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
@@ -140,6 +143,10 @@ def register(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
+        if email[-14:] == "@accenture.com":
+            mentor = True
+        else:
+            mentor = False
 
         # Ensure password matches confirmation
         password = request.POST["password"]
@@ -151,7 +158,10 @@ def register(request):
 
         # Attempt to create new user
         try:
-            user = User.objects.create_user(username, email, password)
+            user = User.objects.create_user(
+                username, email, password,
+                is_mentor=mentor
+            )
             user.save()
         except IntegrityError:
             return render(request, "api/register.html", {

@@ -26,9 +26,12 @@ class User(AbstractUser):
     tags = models.CharField(
         max_length=2,
         choices=TAG_CHOICES,
-        default="None",
+        default=NON,
     )
-    is_free = models.BooleanField(default=False)
+    start_time = models.TimeField(
+        auto_now=False, auto_now_add=False, default="9:00")
+    end_time = models.TimeField(
+        auto_now=False, auto_now_add=False, default="17:00")
 
 
 class Post(models.Model):
@@ -40,7 +43,7 @@ class Post(models.Model):
     tags = models.CharField(
         max_length=2,
         choices=TAG_CHOICES,
-        default="AW",
+        default=NON,
     )
 
 
