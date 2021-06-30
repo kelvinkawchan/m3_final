@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     heart.addEventListener('click', () => updateLike(heart, false));
   });
 
-  document.querySelectorAll('.edit').forEach(edit => {
+  document.querySelectorAll('.post-comment').forEach(edit => {
     edit.addEventListener('click', function () {
       const postId = edit.dataset.post;
       const area = document.querySelector(`.edit-area[data-post="${postId}"]`);

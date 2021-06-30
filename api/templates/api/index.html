@@ -38,70 +38,85 @@
 </div>
 {% endif %}
 
-{% if is_mentor %}
-{% if profile.tags == "None" %}
-<form action="{% url 'new_post' %}" method="post">
+{% if show_tags %}
+<form action="{% url 'user' user.username %}" method="post">
     {% csrf_token %}
-    <p>Choose your expertise</p>
-    <input type="radio" id="none" name="tags" value="none" checked>
+    <p>You haven't chosen your expertise, mentor.</p>
+    <input type="radio" id="none" name="tags" value="NO" checked>
     <label for="none">None</label>
-    <input type="radio" id="aws" name="tags" value="aws">
+    <input type="radio" id="aws" name="tags" value="AW">
     <label for="aws">AWS</label>
-    <input type="radio" id="react" name="tags" value="react">
+    <input type="radio" id="react" name="tags" value="RC">
     <label for="react">ReactJS</label>
-    <input type="radio" id="node" name="tags" value="node">
+    <input type="radio" id="node" name="tags" value="NJ">
     <label for="node">NodeJS</label>
-    <input type="radio" id="uxui" name="tags" value="uxui">
+    <input type="radio" id="uxui" name="tags" value="UX">
     <label for="uxui">UX/UI</label>
-    <input type="radio" id="secure" name="tags" value="secure">
+    <input type="radio" id="secure" name="tags" value="SC">
     <label for="secure">Security</label>
-    <input type="radio" id="azure" name="tags" value="azure">
+    <input type="radio" id="azure" name="tags" value="AZ">
     <label for="azure">Azure</label>
     <br>
     <button class="btn btn-sm btn-primary">Submit</button>
 </form>
 {% endif %}
 
+{% if is_mentor %}
+<p>Are you available, mentor?</p>
+<p>Your current status is set to {{ is_free }}.</p>
+{% if is_free == "Available" %}
+<form action="{% url 'busy' request.user.username %}" method="post">
+    {% csrf_token %}
+    <input class="btn btn-small btn-danger" type="submit" value="busy" />
+</form>
+{% else %}
+<form action="{% url 'free' request.user.username %}" method="post">
+    {% csrf_token %}
+    <input class="btn btn-small btn-success" type="submit" value="free" />
+</form>
+{% endif %}
 {% endif %}
 
 {% csrf_token %}
 {% for post in page.object_list %}
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">
-            <a href="#">
-                {{ post.title }}
-            </a>
-        </h5>
-        <p>Posted by: {{ post.poster.username }}</p>
-        <p class="tag-style">{{ post.tags }}</p>
-        {% if post.poster == request.user %}
-        <!-- <div>
-            <a data-post="{{ post.id }}" class="edit" href="#">Edit</a>
-        </div> -->
-        <textarea data-post="{{ post.id }}" class="edit-area form-control"></textarea>
+{% if post.is_answered %}
+<div class="card-ans">
+    {% else %}
+    <div class="card-nans">
         {% endif %}
-        <div data-post="{{ post.id }}" class="post-content">{{ post.content }}</div>
-        <div class="info">{{ post.creation_time }}</div>
-        <div class="info">
-            <i data-like="{% if user in post.likes.all %}1{% else %}0{% endif %}" data-post="{{ post.id }}"
-                class="{% if user.is_authenticated %}heart{% endif %} fa fa-heart {% if user in post.likes.all %}liked{% else %}not-liked{% endif %}"></i>
-            <span class="like-count" data-post="{{ post.id }}">{{ post.likes.count }}</span>
+        <div class="card-body">
+            <h5 class="card-title">
+                {{ post.title }}
+            </h5>
+            <p>Posted by: {{ post.poster.username }}</p>
+            <p>Assigned to: {{ post.mentor.username }}</p>
+            <p class="tag-style">{{ post.tags }}</p>
+            {% if post.poster == request.user %}
+            <textarea data-post="{{ post.id }}" class="edit-area form-control"></textarea>
+            {% endif %}
+            <div data-post="{{ post.id }}" class="post-content">{{ post.content }}</div>
+            <div class="info">{{ post.creation_time }}</div>
+            <div class="info">
+                <i data-like="{% if user in post.likes.all %}1{% else %}0{% endif %}" data-post="{{ post.id }}"
+                    class="{% if user.is_authenticated %}heart{% endif %} fa fa-heart {% if user in post.likes.all %}liked{% else %}not-liked{% endif %}"></i>
+                <span class="like-count" data-post="{{ post.id }}">{{ post.likes.count }}</span>
+            </div>
+            {% if request.user == post.mentor %}
+            <div data-post="{{ post.id }}" class="info post-comment">Comment</div>
+            {% endif %}
         </div>
-        <div data-post="{{ post.id }}" class="info post-comment">Comment</div>
     </div>
-</div>
-{% endfor %}
+    {% endfor %}
 
-<hr>
-<ul class="pagination pagination-sm">
-    {% if page.has_previous %}
-    <li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}">Newer Posts</a></li>
-    {% endif %}
-    {% if page.has_next %}
-    <li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}">Older Posts</a></li>
-    {% endif %}
-</ul>
+    <hr>
+    <ul class="pagination pagination-sm">
+        {% if page.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}">Newer Posts</a></li>
+        {% endif %}
+        {% if page.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}">Older Posts</a></li>
+        {% endif %}
+    </ul>
 
-<script src="{% static 'api/scripts.js' %}"></script>
-{% endblock %}
+    <script src="{% static 'api/scripts.js' %}"></script>
+    {% endblock %}

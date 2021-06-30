@@ -6,8 +6,16 @@ button {
     margin-top: 2px;
 }
 
-.card {
+.card-ans {
     margin: 5px;
+    border-style: solid;
+    border-color: green;
+}
+
+.card-nans {
+    margin: 5px;
+    border-style: solid;
+    border-color: maroon;
 }
 
 .card-title a {
@@ -32,4 +40,9 @@ button {
 
 .liked {
     color: red;
+}
+
+.post-comment:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }

@@ -22,16 +22,13 @@ TAG_CHOICES = [
 
 class User(AbstractUser):
     is_mentor = models.BooleanField(default=False)
-    likes = models.ManyToManyField("Post", related_name="likes")
+    likes = models.ManyToManyField("Post", related_name="likes", blank=True)
     tags = models.CharField(
         max_length=2,
         choices=TAG_CHOICES,
         default=NON,
     )
-    start_time = models.TimeField(
-        auto_now=False, auto_now_add=False, default="9:00")
-    end_time = models.TimeField(
-        auto_now=False, auto_now_add=False, default="17:00")
+    is_available = models.BooleanField(default=True)
 
 
 class Post(models.Model):
@@ -39,12 +36,15 @@ class Post(models.Model):
     content = models.TextField(max_length=255, blank=False)
     creation_time = models.DateTimeField(auto_now_add=True)
     poster = models.ForeignKey(
-        "User", on_delete=models.CASCADE, related_name="posts")
+        "User", on_delete=models.CASCADE, related_name="student_posts")
+    mentor = models.ForeignKey(
+        "User", on_delete=models.CASCADE, related_name="mentor")
     tags = models.CharField(
         max_length=2,
         choices=TAG_CHOICES,
         default=NON,
     )
+    is_answered = models.BooleanField(default=False)
 
 
 class Comment(models.Model):

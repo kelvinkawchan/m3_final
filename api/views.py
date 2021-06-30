@@ -1,4 +1,5 @@
 import json
+import random
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +9,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonRespons
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
-from .models import User, Post
+from .models import User, Post, Comment
 
 
 def show_posts(title, request, posts, profile=None):
@@ -18,10 +19,25 @@ def show_posts(title, request, posts, profile=None):
     paginator = Paginator(posts, 10)
     page = paginator.page(page_index)
 
-    if profile is None or (not request.user.is_mentor):
-        mentor = False
+    if profile is None:
+        if request.user.is_authenticated:
+            mentor = request.user.is_mentor
+            tag = request.user.is_mentor and (request.user.tags == "NO")
+            if request.user.is_available:
+                avail = "Available"
+            else:
+                avail = "Busy"
+        else:
+            mentor = False
+            tag = False
+            avail = "Busy"
     else:
-        mentor = True
+        mentor = request.user.is_mentor
+        tag = request.user.is_mentor and (request.user.tags == "NO")
+        if request.user.is_available:
+            avail = "Available"
+        else:
+            avail = "Busy"
 
     # Show posts page
     return render(request, "api/index.html", {
@@ -29,6 +45,8 @@ def show_posts(title, request, posts, profile=None):
         "page": page,
         "profile": profile,
         "is_mentor": mentor,
+        "is_free": avail,
+        "show_tags": tag,
         "show_new_post": (
             request.user.is_authenticated and
             (profile is None or profile == request.user) and
@@ -66,6 +84,14 @@ def edit(request, post_id):
         })
 
 
+def assign_mentor(tag):
+    mentors = User.objects.filter(is_mentor=True, tags=tag).all()
+    if not mentors:
+        mentors = User.objects.filter(is_mentor=True).all()
+    experts = list(mentors)
+    return random.choice(experts)
+
+
 @login_required
 def new_post(request):
     if request.method == "POST":
@@ -73,9 +99,9 @@ def new_post(request):
             title=request.POST["title"],
             content=request.POST["content"],
             tags=request.POST["tags"],
-            poster=request.user
+            poster=request.user,
+            mentor=assign_mentor(request.POST["tags"])
         )
-        print(request.POST["tags"])
         p.save()
         return HttpResponseRedirect(
             request.META.get("HTTP_REFERER", reverse("index"))
@@ -105,12 +131,56 @@ def post(request, post_id):
     })
 
 
+@login_required
+def free(request, username):
+    if request.method == "POST":
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Http404("User does not exist.")
+        if user == request.user:
+            user.is_available = True
+            user.save()
+    return HttpResponseRedirect(reverse("index"))
+
+
+@login_required
+def busy(request, username):
+    if request.method == "POST":
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Http404("User does not exist.")
+        if user == request.user:
+            user.is_available = False
+            user.save()
+    return HttpResponseRedirect(reverse("index"))
+
+
+@login_required
 def user(request, username):
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
         raise Http404("User does not exist.")
-    posts = Post.objects.filter(poster=user).order_by("-creation_time").all()
+
+    if request.method == "POST" and user.is_mentor:
+        tags = request.POST["tags"]
+        if tags != "None":
+            user.tags = tags
+            user.save()
+            return HttpResponseRedirect(reverse("index"))
+
+    if user.is_mentor:
+        pass
+    else:
+        posts_top = Post.objects.filter(
+            poster=user, is_answered=False).order_by("-creation_time").all()
+        posts_down = Post.objects.filter(
+            poster=user, is_answered=True).order_by("-creation_time").all()
+        posts = QuerySetChain(posts_top, posts_down)
+        # posts = Post.objects.filter(
+        #     poster=user).order_by("-creation_time").all()
     return show_posts(user.username, request, posts, profile=user)
 
 
