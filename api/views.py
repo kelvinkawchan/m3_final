@@ -10,6 +10,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from .models import User, Post, Comment
+from .helper import QuerySetChain
 
 
 def show_posts(title, request, posts, profile=None):
@@ -56,7 +57,12 @@ def show_posts(title, request, posts, profile=None):
 
 
 def index(request):
-    posts = Post.objects.order_by("-creation_time").all()
+    # posts = Post.objects.order_by("-creation_time").all()
+    posts_top = Post.objects.filter(
+        is_answered=False).order_by("-creation_time").all()
+    posts_down = Post.objects.filter(
+        is_answered=True).order_by("-creation_time").all()
+    posts = QuerySetChain(posts_top, posts_down)
     return show_posts("All Posts", request, posts)
 
 
@@ -172,15 +178,17 @@ def user(request, username):
             return HttpResponseRedirect(reverse("index"))
 
     if user.is_mentor:
-        pass
+        posts_top = Post.objects.filter(
+            mentor=user, is_answered=False).order_by("-creation_time").all()
+        posts_down = Post.objects.filter(
+            mentor=user, is_answered=True).order_by("-creation_time").all()
+        posts = QuerySetChain(posts_top, posts_down)
     else:
         posts_top = Post.objects.filter(
             poster=user, is_answered=False).order_by("-creation_time").all()
         posts_down = Post.objects.filter(
             poster=user, is_answered=True).order_by("-creation_time").all()
         posts = QuerySetChain(posts_top, posts_down)
-        # posts = Post.objects.filter(
-        #     poster=user).order_by("-creation_time").all()
     return show_posts(user.username, request, posts, profile=user)
 
 
